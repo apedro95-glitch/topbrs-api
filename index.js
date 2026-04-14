@@ -1,32 +1,27 @@
-export default async function handler(req, res) {
-  const { tag } = req.query;
+import express from "express";
+import fetch from "node-fetch";
 
-  if (!tag) {
-    return res.status(400).json({ error: "Tag não informada" });
-  }
+const app = express();
 
-  try {
-    const formattedTag = encodeURIComponent(tag.toUpperCase());
+app.get("/", (req, res) => {
+  res.send("API TopBRS funcionando 🚀");
+});
 
-    const response = await fetch(`https://api.clashroyale.com/v1/players/${formattedTag}`, {
-      headers: {
-        Authorization: `Bearer ${process.env.CLASH_API_KEY}`,
-      },
-    });
+app.get("/player/:tag", async (req, res) => {
+  const tag = req.params.tag.replace("#", "%23");
 
-    if (!response.ok) {
-      return res.status(404).json({ error: "Jogador não encontrado" });
+  const response = await fetch(`https://api.clashroyale.com/v1/players/${tag}`, {
+    headers: {
+      Authorization: `Bearer ${process.env.CLASH_API_KEY}`
     }
+  });
 
-    const data = await response.json();
+  const data = await response.json();
+  res.json(data);
+});
 
-    return res.status(200).json({
-      name: data.name,
-      tag: data.tag,
-      trophies: data.trophies,
-    });
+const PORT = process.env.PORT || 3000;
 
-  } catch (error) {
-    return res.status(500).json({ error: "Erro ao consultar API" });
-  }
-}
+app.listen(PORT, () => {
+  console.log("Servidor rodando na porta", PORT);
+});
